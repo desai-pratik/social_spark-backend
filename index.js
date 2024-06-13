@@ -7,23 +7,23 @@ const morgan = require('morgan');
 const userRoute = require("./routes/users")
 const authRoute = require("./routes/auth")
 const postRoute = require("./routes/posts")
+const cors = require('cors');
 
 dotenv.config()
 
-// Use async/await to connect to mongoose
 const connectDB = async () => {
     try {
         await mongoose.connect(process.env.MONG_URL);
         console.log("Connected to mongoose successfully");
     } catch (error) {
         console.error("Could not connect to mongoose", error);
-        process.exit(1); // Exit process with failure
+        process.exit(1); 
     }
 };
 
 connectDB();
 
-
+app.use(cors());
 app.use(express.json());
 app.use(helmet());
 app.use(morgan('common'));
