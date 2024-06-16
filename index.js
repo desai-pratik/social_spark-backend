@@ -31,23 +31,56 @@ app.use(helmet());
 app.use(morgan('common'));
 
 
+// const storage = multer.diskStorage({
+//     destination: (req, file, cb) => {
+//         db(null, "public/images")
+//     },
+//     filename: (req, file, cb) => {
+//         db(null, file.originalname)
+//     }
+// })
+// const upload = multer({ storage });
+
+// app.post("/api/upload", upload.single("file"), (req, res) => {
+//     try {
+//         return res.status(200).json("File uploaded successfully.")
+//     } catch (error) {
+//         console.log(error);
+//     }
+// })
+
+const ensureDirectoryExistence = (filePath) => {
+    const dirname = path.dirname(filePath);
+    if (fs.existsSync(dirname)) {
+        return true;
+    }
+    ensureDirectoryExistence(dirname);
+    fs.mkdirSync(dirname);
+};
+
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        db(null, "public/images")
+        const uploadPath = "public/images";
+        ensureDirectoryExistence(uploadPath);
+        cb(null, uploadPath);
     },
     filename: (req, file, cb) => {
-        db(null, file.originalname)
+        cb(null, file.originalname);
     }
-})
+});
+
 const upload = multer({ storage });
 
 app.post("/api/upload", upload.single("file"), (req, res) => {
     try {
-        return res.status(200).json("File uploaded successfully.")
+        return res.status(200).json("File uploaded successfully.");
     } catch (error) {
         console.log(error);
+        return res.status(500).json("Error uploading file.");
     }
-})
+});
+
+
 
 
 
