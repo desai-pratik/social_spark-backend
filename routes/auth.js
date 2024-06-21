@@ -25,7 +25,7 @@ router.post('/register', [
         });
 
         const user = await newUser.save();
-        res.status(200).json({ ...user, token: generateToken(user._id) })
+        res.status(200).json({ ...user._doc, token: generateToken(user._id) })
     } catch (err) {
         console.log(err);
         res.status(500).json({ error: 'Internal server error' });
@@ -50,7 +50,7 @@ router.post('/login', [
         if (!validPassword) {
             return res.status(400).json({ error: 'Wrong password.' });
         }
-        res.status(200).json({...user, token: generateToken(user._id)});
+        res.status(200).json({ ...user._doc, token: generateToken(user._id) });
     } catch (error) {
         console.log(error);
         res.status(500).json({ error: 'Internal server error' });

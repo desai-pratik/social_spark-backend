@@ -38,14 +38,28 @@ router.delete('/:id', async (req, res) => {
     }
 });
 
-// get user
+// get user and search user
 router.get('/', async (req, res) => {
     const userId = req.query.userId;
     const username = req.query.username;
+    const search = req.query.search;
     try {
-        const user = userId ? await User.findById(userId) : await User.findOne({ username: username });
-        const { password, updatedAt, ...other } = user._doc
-        res.status(200).json(other)
+        if (userId || username) {
+            const user = userId ? await User.findById(userId) : await User.findOne({ username: username });
+            const { password, updatedAt, ...other } = user._doc;
+            return res.status(200).json(other);
+        }
+        if (search) {
+            const searchQuery = {
+                $or: [
+                    { username: { $regex: search, $options: "i" } },
+                    { email: { $regex: search, $options: "i" } },
+                ]
+            }
+            const users = await User.find(searchQuery).find({ _id: { $ne: req.user?._id } });
+            return res.status(200).json(users);;
+        }
+        return res.status(400).json("No valid query parameters provided");
     } catch (err) {
         return res.status(500).json(err);
     }
