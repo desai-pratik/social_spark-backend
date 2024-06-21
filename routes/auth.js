@@ -2,14 +2,15 @@ const router = require("express").Router()
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
 const { body, validationResult } = require('express-validator');
+const generateToken = require("../config/generateToken")
 
 // register
 router.post('/register', [
-      body('username').isLength({ min: 3 }).withMessage('Username must be at least 3 characters long'),
+    body('username').isLength({ min: 3 }).withMessage('Username must be at least 3 characters long'),
     body('email').isEmail().withMessage('Please enter a valid email address'),
     body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long')
 ], async (req, res) => {
-     const errors = validationResult(req);
+    const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
     }
@@ -22,11 +23,12 @@ router.post('/register', [
             email: req.body.email,
             password: hasHedPassword,
         });
+
         const user = await newUser.save();
-        res.status(200).json(user)
+        res.status(200).json({ ...user, token: generateToken(user._id) })
     } catch (err) {
         console.log(err);
-         res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 

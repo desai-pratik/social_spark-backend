@@ -4,16 +4,15 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const helmet = require('helmet');
 const morgan = require('morgan');
-const multer = require("multer")
-const userRoute = require("./routes/users")
-const authRoute = require("./routes/auth")
-const postRoute = require("./routes/posts")
+const userRoute = require("./routes/users");
+const authRoute = require("./routes/auth");
+const postRoute = require("./routes/posts");
+const chatRoute = require("./routes/chat");
 const cors = require('cors');
-const path = require('path');
-const fs = require('fs');
 
-dotenv.config()
 
+
+dotenv.config();
 const connectDB = async () => {
     try {
         await mongoose.connect(process.env.MONG_URL);
@@ -32,62 +31,11 @@ app.use(helmet());
 app.use(morgan('common'));
 
 
-// const storage = multer.diskStorage({
-//     destination: (req, file, cb) => {
-//         db(null, "public/images")
-//     },
-//     filename: (req, file, cb) => {
-//         db(null, file.originalname)
-//     }
-// })
-// const upload = multer({ storage });
-
-// app.post("/api/upload", upload.single("file"), (req, res) => {
-//     try {
-//         return res.status(200).json("File uploaded successfully.")
-//     } catch (error) {
-//         console.log(error);
-//     }
-// })
-
-const ensureDirectoryExistence = (filePath) => {
-    const dirname = path.dirname(filePath);
-    if (fs.existsSync(dirname)) {
-        return true;
-    }
-    ensureDirectoryExistence(dirname);
-    fs.mkdirSync(dirname);
-};
-
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        const uploadPath = "public/images";
-        ensureDirectoryExistence(uploadPath);
-        cb(null, uploadPath);
-    },
-    filename: (req, file, cb) => {
-        cb(null, file.originalname);
-    }
-});
-
-const upload = multer({ storage });
-
-app.post("/api/upload", upload.single("file"), (req, res) => {
-    try {
-        return res.status(200).json("File uploaded successfully.");
-    } catch (error) {
-        console.log(error);
-        return res.status(500).json("Error uploading file.");
-    }
-});
-
-
-
-
-
 app.use("/api/user", userRoute)
 app.use("/api/auth", authRoute)
 app.use("/api/posts", postRoute)
+app.use("/api/posts", postRoute)
+app.use("/api/chats", chatRoute)
 
 app.get("/", (req, res) => {
     res.send('welcome to home page')
@@ -95,5 +43,3 @@ app.get("/", (req, res) => {
 app.listen(4000, () => {
     console.log("Backend server is running on port of 4000");
 })
-
-
