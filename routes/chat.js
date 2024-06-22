@@ -10,38 +10,36 @@ router.post("/", verifyToken, async (req, res) => {
     console.log("userId params not sent with request.");
     return res.status(400).json("userId not provided");
   }
-  var isChat = await Chat.find({
-    isGroupChat: false,
-    $and: [
-      { users: { $elemMatch: { $eq: req.user._id } } },
-      { users: { $elemMatch: { $eq: userId } } },
-    ]
-  }).populate("users", "-password").populate("latestMessage");
-
-  isChat = await User.populate(isChat, {
-    path: "latestMessage.sender",
-    select: "username profilePicture email"
-  });
-
-  if (isChat.length > 0) {
-    res.send(isChat[0]);
-  } else {
-    var chatData = {
-      chatName: "sender",
+  try {
+    var isChat = await Chat.find({
       isGroupChat: false,
-      users: [req.user._id, userId]
-    }
+      $and: [
+        { users: { $elemMatch: { $eq: req.user._id } } },
+        { users: { $elemMatch: { $eq: userId } } },
+      ]
+    }).populate("users", "-password").populate("latestMessage");
 
-    try {
+    isChat = await User.populate(isChat, {
+      path: "latestMessage.sender",
+      select: "username profilePicture email"
+    });
+
+    if (isChat.length > 0) {
+      res.send(isChat[0]);
+    } else {
+      var chatData = {
+        chatName: "sender",
+        isGroupChat: false,
+        users: [req.user._id, userId]
+      }
+
       const createdChat = await Chat.create(chatData);
-      const fullChat = Chat.findOne({ _id: createdChat._id }).populate("users", "-password")
+      const fullChat = await Chat.findOne({ _id: createdChat._id }).populate("users", "-password")
       res.status(200).send(fullChat);
-    } catch (error) {
-      res.status(400).json(error);
     }
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
   }
-
-
 });
 
 
