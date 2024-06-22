@@ -75,19 +75,20 @@ router.post("/group", verifyToken, async (req, res) => {
   if (users.length < 2) {
     return res.status(400).send("More then 2 users are required to form A group chat.")
   }
-  users.push(req.user._id);
+  users.push(req.user.id);
 
   try {
     const groupChat = await Chat.create({
       chatName: req.body.name,
       users: users,
       isGroupChat: true,
-      groupAdmin: req.user
+      groupAdmin: req.user.id // Use req.user.id instead of req.user
     });
+
 
     const fullGroupChat = await Chat.findOne({ _id: groupChat._id })
       .populate("users", "-password")
-      .populate("groupAdmin", "-password")
+      .populate("groupAdmin", "-password");
 
     res.status(200).json(fullGroupChat);
   } catch (error) {
@@ -97,22 +98,71 @@ router.post("/group", verifyToken, async (req, res) => {
 });
 
 
-// // rename group
-// router.put("/rename", async (req, res) => {         
-//   res.send('welcome to chat page')
-// });
+// rename group
+router.put("/rename", verifyToken, async (req, res) => {
+  const { chatId, chatName } = req.body;
+
+  const updatedChat = await Chat.findByIdAndUpdate(
+    chatId, {
+    chatName,
+  },
+    {
+      new: true,
+    },
+  ).populate("users", "-password")
+    .populate("groupAdmin", "-password");
+
+  if (!updatedChat) {
+    res.status(404);
+  } else {
+    res.json(updatedChat);
+  }
+});
 
 
-// // remove group or leave group
-// router.put("/groupremove", async (req, res) => {         
-//   res.send('welcome to chat page')
-// });
+// add in group
+router.put("/groupadd", verifyToken, async (req, res) => {
+  const { chatId, userId } = req.body;
+
+  const added = await Chat.findByIdAndUpdate(
+    chatId,
+    {
+      $push: { users: userId },
+    },
+    { new: true },
+  ).populate("users", "-password")
+    .populate("groupAdmin", "-password");
+
+  if (!added) {
+    res.status(404);
+  } else {
+    res.json(added);
+  }
+});
 
 
-// // remove group or leave group
-// router.put("/groupadd", async (req, res) => {         
-//   res.send('welcome to chat page')
-// });
+// remove group or leave group
+router.put("/groupremove", async (req, res) => {
+  const { chatId, userId } = req.body;
+
+  const remove = await Chat.findByIdAndUpdate(
+    chatId,
+    {
+      $pull: { users: userId },
+    },
+    { new: true },
+  ).populate("users", "-password")
+    .populate("groupAdmin", "-password");
+
+  if (!remove) {
+    res.status(404);
+  } else {
+    res.json(remove);
+  }
+
+});
+
+
 
 
 module.exports = router;
