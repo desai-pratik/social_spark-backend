@@ -45,38 +45,35 @@ router.post("/", verifyToken, async (req, res) => {
 
 // get chat for all users
 router.get("/", verifyToken, async (req, res) => {
-  // try {
-  //   await Chat.find({ users: { $elemMatch: { $eq: req.user._id } } })
-  //     .populate("users", "-password")
-  //     .populate("groupAdmin", "-password")
-  //     .populate("latestMessage")
-  //     .sort({ updatedAt: -1 })
-  //     .then(async (results) => {
-  //       results = await User.populate(results, {
-  //         path: "latestMessage.sender",
-  //         select: "username profilePicture email"
-  //       });
-  //       res.status(200).send(results);
-  //     });
-  // } catch (error) {
-  //   res.status(400).json(error);
-  // }
   try {
+    // await Chat.find({ users: { $elemMatch: { $eq: req.user._id } } })
+    //   .populate("users", "-password")
+    //   .populate("groupAdmin", "-password")
+    //   .populate("latestMessage")
+    //   .sort({ updatedAt: -1 })
+    //   .then(async (results) => {
+    //     results = await User.populate(results, {
+    //       path: "latestMessage.sender",
+    //       select: "username profilePicture email"
+    //     });
+    //     res.status(200).send(results);
+    //   });
+
+
     const chats = await Chat.find({ users: { $elemMatch: { $eq: req.user._id } } })
       .populate("users", "-password")
       .populate("groupAdmin", "-password")
       .populate("latestMessage")
       .sort({ updatedAt: -1 });
 
-    const fullChats = await User.populate(chats, {
+    const fullResults = await User.populate(chats, {
       path: "latestMessage.sender",
       select: "username profilePicture email"
     });
 
-    res.status(200).send(fullChats);
+    res.status(200).send(fullResults);
   } catch (error) {
-    console.error(error);
-    res.status(400).json({ error: 'Failed to fetch chats', details: error });
+    res.status(400).json(error);
   }
 });
 
