@@ -11,7 +11,7 @@ router.post("/", verifyToken, async (req, res) => {
     console.log("userId params not sent with request.");
     return res.status(400).json("userId not provided");
   }
-  try {
+  try { 
     var isChat = await Chat.find({
       isGroupChat: false,
       $and: [
@@ -24,14 +24,15 @@ router.post("/", verifyToken, async (req, res) => {
       path: "latestMessage.sender",
       select: "username profilePicture email"
     });
-
+  
     if (isChat.length > 0) {
       res.send(isChat[0]);
     } else {
+      
       var chatData = {
         chatName: "sender",
         isGroupChat: false,
-        users: [req.user._id, userId]
+        users: [req.user.id, userId]
       }
       const createdChat = await Chat.create(chatData);
       const fullChat = await Chat.findOne({ _id: createdChat._id }).populate("users", "-password")
