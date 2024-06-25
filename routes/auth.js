@@ -2,7 +2,9 @@ const router = require("express").Router()
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
 const { body, validationResult } = require('express-validator');
-const generateToken = require("../config/generateToken")
+const { generateToken } = require("../middleware/authMiddleware");
+// const generateToken = require("../config/generateToken");
+// const verifyToken = require("../middleware/authMiddleware");
 
 // register
 router.post('/register', [
@@ -23,14 +25,15 @@ router.post('/register', [
             email: req.body.email,
             password: hasHedPassword,
         });
-
         const user = await newUser.save();
-        res.status(200).json({ ...user._doc, token: generateToken(user._id) })
+        const token = generateToken(user);
+        res.status(200).json({ ...user._doc, token  })
     } catch (err) {
         console.log(err);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
+
 
 // login
 router.post('/login', [
@@ -50,7 +53,8 @@ router.post('/login', [
         if (!validPassword) {
             return res.status(400).json({ error: 'Wrong password.' });
         }
-        res.status(200).json({ ...user._doc, token: generateToken(user._id) });
+        const token = generateToken(user);
+        res.status(200).json({ ...user._doc, token });
     } catch (error) {
         console.log(error);
         res.status(500).json({ error: 'Internal server error' });

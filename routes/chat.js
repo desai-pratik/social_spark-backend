@@ -1,11 +1,12 @@
 const router = require("express").Router();
 const Chat = require("../models/Chat");
 const User = require("../models/User");
-const verifyToken = require('../middleware/authMiddleware');
+const { verifyToken } = require('../middleware/authMiddleware');
 
 // post chat
 router.post("/", verifyToken, async (req, res) => {
   const { userId } = req.body;
+  console.log(req.user.id);
   if (!userId) {
     console.log("userId params not sent with request.");
     return res.status(400).json("userId not provided");
@@ -14,7 +15,7 @@ router.post("/", verifyToken, async (req, res) => {
     var isChat = await Chat.find({
       isGroupChat: false,
       $and: [
-        { users: { $elemMatch: { $eq: req.user._id } } },
+        { users: { $elemMatch: { $eq: req.user.id } } },
         { users: { $elemMatch: { $eq: userId } } },
       ]
     }).populate("users", "-password").populate("latestMessage");
@@ -32,7 +33,6 @@ router.post("/", verifyToken, async (req, res) => {
         isGroupChat: false,
         users: [req.user._id, userId]
       }
-
       const createdChat = await Chat.create(chatData);
       const fullChat = await Chat.findOne({ _id: createdChat._id }).populate("users", "-password")
       res.status(200).send(fullChat);
@@ -45,35 +45,44 @@ router.post("/", verifyToken, async (req, res) => {
 
 // get chat for all users
 router.get("/", verifyToken, async (req, res) => {
+
   try {
-    // await Chat.find({ users: { $elemMatch: { $eq: req.user._id } } })
-    //   .populate("users", "-password")
-    //   .populate("groupAdmin", "-password")
-    //   .populate("latestMessage")
-    //   .sort({ updatedAt: -1 })
-    //   .then(async (results) => {
-    //     results = await User.populate(results, {
-    //       path: "latestMessage.sender",
-    //       select: "username profilePicture email"
-    //     });
-    //     res.status(200).send(results);
-    //   });
-    
-    const chats = await Chat.find({ users: { $elemMatch: { $eq: req.user._id } } })
+    await Chat.find({ users: { $elemMatch: { $eq: req.user.id } } })
       .populate("users", "-password")
       .populate("groupAdmin", "-password")
       .populate("latestMessage")
-      .sort({ updatedAt: -1 });
-
-    const populatedChats = await User.populate(chats, {
-      path: "latestMessage.sender",
-      select: "username profilePicture email"
-    });
-    res.status(200).send(populatedChats);
+      .sort({ updatedAt: -1 })
+      .then(async (results) => {
+        results = await User.populate(results, {
+          path: "latestMessage.sender",
+          select: "username profilePicture email"
+        });
+        res.status(200).send(results);
+      });
 
   } catch (error) {
     res.status(400).json(error);
   }
+
+  // try {
+  //   console.log(req.user.id);
+  //   const chats = await Chat.find({ users: { $elemMatch: { $eq: req.user.id } } })
+  //     .populate("users", "-password")
+  //     .populate("groupAdmin", "-password")
+  //     .populate("latestMessage")
+  //     .sort({ updatedAt: -1 });
+
+  //   const results = await User.populate(chats, {
+  //     path: "latestMessage.sender",
+  //     select: "username profilePicture email"
+  //   });
+
+  //   res.status(200).send(results);
+  // } catch (error) {
+  //   console.error(error);
+  //   res.status(400).json({ error: 'Error fetching chats' });
+  // }
+
 });
 
 
@@ -93,9 +102,8 @@ router.post("/group", verifyToken, async (req, res) => {
       chatName: req.body.name,
       users: users,
       isGroupChat: true,
-      groupAdmin: req.user.id // Use req.user.id instead of req.user
+      groupAdmin: req.user._id // Use req.user.id instead of req.user
     });
-
 
     const fullGroupChat = await Chat.findOne({ _id: groupChat._id })
       .populate("users", "-password")
