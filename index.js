@@ -8,6 +8,7 @@ const userRoute = require("./routes/users");
 const authRoute = require("./routes/auth");
 const postRoute = require("./routes/posts");
 const chatRoute = require("./routes/chat");
+const messagesRoute = require("./routes/messages");
 const cors = require('cors');
 
 
@@ -34,8 +35,8 @@ app.use(morgan('common'));
 app.use("/api/user", userRoute)
 app.use("/api/auth", authRoute)
 app.use("/api/posts", postRoute)
-app.use("/api/posts", postRoute)
 app.use("/api/chats", chatRoute)
+app.use("/api/messages", messagesRoute)
 
 app.get("/", (req, res) => {
     res.send('welcome to home page')
