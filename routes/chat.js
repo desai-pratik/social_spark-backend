@@ -6,9 +6,9 @@ const { verifyToken } = require('../middleware/authMiddleware');
 // post chat
 router.post("/", verifyToken, async (req, res) => {
   const { userId } = req.body;
-  console.log(req.user.id);
+  // console.log(req.user.id);
   if (!userId) {
-    console.log("userId params not sent with request.");
+    // console.log("userId params not sent with request.");
     return res.status(400).json("userId not provided");
   }
   try { 
