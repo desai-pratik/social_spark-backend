@@ -1,6 +1,7 @@
 const Post = require("../models/Post");
 const router = require("express").Router();
 const User = require("../models/User");
+const { verifyToken } = require('../middleware/authMiddleware');
 
 // create post
 router.post("/", async (req, res) => {
@@ -27,10 +28,10 @@ router.put("/:id", async (req, res) => {
   }
 });
 // delete post
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", verifyToken, async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
-    if (post.userId === req.body.userId) {
+    if (post.userId === req.user.id) {
       await post.deleteOne();
       res.status(200).json("the post has been deleted.");
     } else {
