@@ -11,7 +11,7 @@ router.post("/", verifyToken, async (req, res) => {
     // console.log("userId params not sent with request.");
     return res.status(400).json("userId not provided");
   }
-  try { 
+  try {
     var isChat = await Chat.find({
       isGroupChat: false,
       $and: [
@@ -24,11 +24,11 @@ router.post("/", verifyToken, async (req, res) => {
       path: "latestMessage.sender",
       select: "username profilePicture email"
     });
-  
+
     if (isChat.length > 0) {
       res.send(isChat[0]);
     } else {
-      
+
       var chatData = {
         chatName: "sender",
         isGroupChat: false,
@@ -43,10 +43,8 @@ router.post("/", verifyToken, async (req, res) => {
   }
 });
 
-
 // get chat for all users
 router.get("/", verifyToken, async (req, res) => {
-
   try {
     await Chat.find({ users: { $elemMatch: { $eq: req.user.id } } })
       .populate("users", "-password")
@@ -64,28 +62,7 @@ router.get("/", verifyToken, async (req, res) => {
   } catch (error) {
     res.status(400).json(error);
   }
-
-  // try {
-  //   console.log(req.user.id);
-  //   const chats = await Chat.find({ users: { $elemMatch: { $eq: req.user.id } } })
-  //     .populate("users", "-password")
-  //     .populate("groupAdmin", "-password")
-  //     .populate("latestMessage")
-  //     .sort({ updatedAt: -1 });
-
-  //   const results = await User.populate(chats, {
-  //     path: "latestMessage.sender",
-  //     select: "username profilePicture email"
-  //   });
-
-  //   res.status(200).send(results);
-  // } catch (error) {
-  //   console.error(error);
-  //   res.status(400).json({ error: 'Error fetching chats' });
-  // }
-
 });
-
 
 // create group
 router.post("/group", verifyToken, async (req, res) => {
@@ -117,7 +94,6 @@ router.post("/group", verifyToken, async (req, res) => {
 
 });
 
-
 // rename group
 router.put("/rename", verifyToken, async (req, res) => {
   const { chatId, chatName } = req.body;
@@ -139,7 +115,6 @@ router.put("/rename", verifyToken, async (req, res) => {
   }
 });
 
-
 // add in group
 router.put("/groupadd", verifyToken, async (req, res) => {
   const { chatId, userId } = req.body;
@@ -160,11 +135,9 @@ router.put("/groupadd", verifyToken, async (req, res) => {
   }
 });
 
-
 // remove group or leave group
 router.put("/groupremove", async (req, res) => {
   const { chatId, userId } = req.body;
-
   const remove = await Chat.findByIdAndUpdate(
     chatId,
     {
@@ -182,7 +155,21 @@ router.put("/groupremove", async (req, res) => {
 
 });
 
-
+// delete chat
+router.delete("/:id", verifyToken, async (req, res) => {
+  try {
+    const chatId = req.params.id;
+    const chat = await Chat.findById(chatId);
+    if (!chat) {
+      return res.status(404).json({ message: "Chat not found" });
+    }
+    await chat.deleteOne();
+    res.status(200).json({ message: "The Chat has been deleted." });
+  } catch (error) {
+    console.error("Error deleting chat:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 
 module.exports = router;
