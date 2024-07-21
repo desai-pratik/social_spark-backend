@@ -45,7 +45,7 @@ const server = app.listen(4000, () => {
 const io = require('socket.io')(server, {
     pingTimeout: 6000,  // this is for waiting second
     cors: {
-        origin: "http://localhost:3000",  // this is solve cors error for chat. this is frontend link
+        origin: "https://socialspark01.netlify.app/chats",  // this is solve cors error for chat. this is frontend link
     },
 });
 
