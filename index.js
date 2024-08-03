@@ -55,8 +55,8 @@ io.on("connection", (socket) => {
 
     socket.on('setup', (userData) => {
         socket.join(userData._id);
-        onlineUsers.set(userData._id, socket.id);
-        io.emit('online users', Array.from(onlineUsers.keys()));
+        onlineUsers.set(userData._id, { socketId: socket.id, username: userData.username, profilePicture: userData.profilePicture });
+        io.emit('online users', Array.from(onlineUsers.values()));
         socket.emit("connected");
     });
 
@@ -84,11 +84,11 @@ io.on("connection", (socket) => {
 
     socket.on('disconnect', () => {
         onlineUsers.forEach((value, key) => {
-            if (value === socket.id) {
+            if (value.socketId === socket.id) {
                 onlineUsers.delete(key);
             }
         });
-        io.emit('online users', Array.from(onlineUsers.keys()));
+        io.emit('online users', Array.from(onlineUsers.values()));
     });
 
     socket.off('setup', () => {
