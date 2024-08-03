@@ -36,10 +36,10 @@ app.use("/api/messages", messagesRoute)
 
 app.get("/", (req, res) => {
     res.send('welcome to home page')
-})
+});
 const server = app.listen(4000, () => {
     console.log("Backend server is running on port of 4000");
-})
+});
 
 // this is for chat (socket.io)
 const io = require('socket.io')(server, {
@@ -50,18 +50,18 @@ const io = require('socket.io')(server, {
     },
 });
 
+let onlineUsers = new Map();
 io.on("connection", (socket) => {
-    // console.log("connected to socket.io");
 
     socket.on('setup', (userData) => {
         socket.join(userData._id);
-        // console.log(userData._id);
+        onlineUsers.set(userData._id, socket.id);
+        io.emit('online users', Array.from(onlineUsers.keys()));
         socket.emit("connected");
     });
 
     socket.on('join chat', (room) => {
         socket.join(room);
-        // console.log("User Join Room:" + room);
     });
 
     socket.on('typing', (room) => {
@@ -75,17 +75,23 @@ io.on("connection", (socket) => {
     socket.on('new message', (newMessageReceived) => {
         var chat = newMessageReceived.chat;
         if (!chat.users) return;
-        //  console.log('chat.users not defined');
-
         chat.users.forEach(user => {
             if (user._id == newMessageReceived.sender._id) return;
 
             socket.in(user._id).emit("message received", newMessageReceived)
         });
-    })
+    });
+
+    socket.on('disconnect', () => {
+        onlineUsers.forEach((value, key) => {
+            if (value === socket.id) {
+                onlineUsers.delete(key);
+            }
+        });
+        io.emit('online users', Array.from(onlineUsers.keys()));
+    });
 
     socket.off('setup', () => {
-        // console.log("User Disconnected");
         socket.leave(userData._id);
     });
 })
