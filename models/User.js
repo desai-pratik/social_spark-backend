@@ -52,9 +52,11 @@ const UserSchema = new mongoose.Schema({
         max: 50,
     },
     relationship: {
-        type: Number,
-        enum: [1, 2, 3]
+        type: String,
+        max: 15,
     },
-}, { timestamps: true })
+}, { timestamps: true });
+
+UserSchema.index({ username: 'text', email: 'text', desc: 'text' });
 
 module.exports = mongoose.model("User", UserSchema);
