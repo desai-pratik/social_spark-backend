@@ -9,6 +9,8 @@ const authRoute = require("./routes/auth");
 const postRoute = require("./routes/posts");
 const chatRoute = require("./routes/chat");
 const messagesRoute = require("./routes/messages");
+const Post = require("./models/Post");
+const User = require('./models/User');
 const cors = require('cors');
 
 dotenv.config();
@@ -34,9 +36,29 @@ app.use("/api/posts", postRoute)
 app.use("/api/chats", chatRoute)
 app.use("/api/messages", messagesRoute)
 
+/// Search endpoint
+app.get('/api/search', async (req, res) => {
+    const query = req.query.q;
+
+    try {
+        const userResults = await User.find({ $text: { $search: query } });
+        const postResults = await Post.find({ $text: { $search: query } });
+    
+        const results = {
+            users: userResults,
+            posts: postResults,
+        };
+
+        res.status(200).json(results);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 app.get("/", (req, res) => {
     res.send('welcome to home page')
 });
+
 const server = app.listen(4000, () => {
     console.log("Backend server is running on port of 4000");
 });
