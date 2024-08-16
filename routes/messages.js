@@ -54,18 +54,20 @@ router.get("/:chatId", verifyToken, async (req, res) => {
     }
 });
 
-router.delete('/', verifyToken, async (req, res) => {
-    const { messageIds } = req.body;
-
-    if (!messageIds || !Array.isArray(messageIds)) {
-        return res.status(400).json({ message: 'Invalid message IDs' });
-    }
-
+router.delete("/:messageId", verifyToken, async (req, res) => {
     try {
-        // Delete messages from the database
-        await Message.deleteMany({ _id: { $in: messageIds } });
+        const message = await Message.findById(req.params.messageId);
 
-        res.status(200).json({ message: 'Messages deleted successfully' });
+        if (!message) {
+            return res.status(404).json({ message: "Message not found" });
+        }
+
+        if (message.sender.toString() !== req.user.id) {
+            return res.status(403).json({ message: "You can only delete your messages" });
+        }
+
+        await message.remove();
+        res.status(200).json({ message: "Message deleted successfully" });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
