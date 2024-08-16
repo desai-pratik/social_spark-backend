@@ -54,4 +54,21 @@ router.get("/:chatId", verifyToken, async (req, res) => {
     }
 });
 
+router.delete('/', verifyToken, async (req, res) => {
+    const { messageIds } = req.body;
+
+    if (!messageIds || !Array.isArray(messageIds)) {
+        return res.status(400).json({ message: 'Invalid message IDs' });
+    }
+
+    try {
+        // Delete messages from the database
+        await Message.deleteMany({ _id: { $in: messageIds } });
+
+        res.status(200).json({ message: 'Messages deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 module.exports = router;

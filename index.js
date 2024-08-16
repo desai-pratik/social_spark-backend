@@ -113,6 +113,10 @@ io.on("connection", (socket) => {
         io.emit('online users', Array.from(onlineUsers.values()));
     });
 
+    socket.on('delete messages', ({ chatId, messageIds }) => {
+        socket.to(chatId).emit("messages deleted", { messageIds });
+    });
+
     socket.off('setup', () => {
         socket.leave(userData._id);
     });
