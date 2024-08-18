@@ -65,13 +65,13 @@ router.delete("/:messageId", verifyToken, async (req, res) => {
         }
         await Message.findByIdAndDelete(req.params.messageId);
 
-        const chat = await Chat.findById(message.chat);
-        if (!chat) {
-            return res.status(404).json({ message: "Chat not found" });
-        }
-        io.to(chat._id).emit('messages deleted', { messageIds: [message._id] });
+        // const chat = await Chat.findById(message.chat);
+        // if (!chat) {
+        //     return res.status(404).json({ message: "Chat not found" });
+        // }
+        // io.to(chat._id).emit('messages deleted', { messageIds: [message._id] });
 
-        
+
         res.status(200).json({ message: "Message deleted successfully" });
     } catch (error) {
         res.status(500).json({ message: error.message });
